@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Repository {
+  id         String   @id @default(uuid())
+  externalId String   @unique
+  name       String
+  fullName   String   @unique
+  provider   String   @default("github")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pullRequests PullRequest[]
+
+  @@map("repositories")
+}
+
+model PullRequest {
+  id           String    @id @default(uuid())
+  externalId   String    @unique
+  number       Int
+  title        String
+  authorLogin  String
+  state        String
+  createdAt    DateTime
+  updatedAt    DateTime
+  mergedAt     DateTime?
+  closedAt     DateTime?
+  additions    Int       @default(0)
+  deletions    Int       @default(0)
+  changedFiles Int       @default(0)
+
+  repositoryId String
+  repository   Repository @relation(fields: [repositoryId], references: [id])
+
+  reviews        Review[]
+  reviewComments ReviewComment[]
+  commits        Commit[]
+
+  @@unique([repositoryId, number])
+  @@index([authorLogin])
+  @@map("pull_requests")
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  externalId    String   @unique
+  reviewerLogin String
+  state         String
+  submittedAt   DateTime
+
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id])
+
+  @@index([reviewerLogin])
+  @@map("reviews")
+}
+
+model ReviewComment {
+  id          String   @id @default(uuid())
+  externalId  String   @unique
+  authorLogin String
+  createdAt   DateTime
+
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id])
+
+  @@index([authorLogin])
+  @@map("review_comments")
+}
+
+model Commit {
+  id          String   @id @default(uuid())
+  sha         String   @unique
+  authorLogin String?
+  committedAt DateTime
+
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id])
+
+  @@index([authorLogin])
+  @@map("commits")
+}
+
+model Engineer {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  displayName String?
+  createdAt   DateTime @default(now())
+
+  @@map("engineers")
+}
