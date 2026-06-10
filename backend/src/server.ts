@@ -1,2 +1,8 @@
-// Placeholder entrypoint - replaced in a later step with the real Express app bootstrap.
-console.log('PR Intelligence backend - scaffold step 1');
+import { createApp } from './app';
+import { env } from './shared/config/env';
+
+const app = createApp();
+
+app.listen(env.PORT, () => {
+  console.log(`PR Intelligence backend listening on port ${env.PORT}`);
+});
