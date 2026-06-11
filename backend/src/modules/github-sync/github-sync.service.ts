@@ -9,10 +9,18 @@ export class GithubSyncService {
   ) {}
 
   async syncRepository(repoName: string): Promise<RepositorySyncResult> {
+    // Capture the watermark before fetching, so updates landing mid-sync aren't missed next time.
+    const syncStartedAt = new Date();
+
     const rawRepo = await this.client.getRepository(this.org, repoName);
+    const previous = await this.repository.getSyncState(String(rawRepo.id));
     const { id: repositoryId } = await this.repository.upsertRepository(rawRepo);
 
-    const pullRequestsData = await this.client.getRepositoryPullRequests(this.org, repoName);
+    const pullRequestsData = await this.client.getRepositoryPullRequests(
+      this.org,
+      repoName,
+      previous?.lastSyncedAt ?? undefined,
+    );
 
     const engineerUsernames = new Set<string>();
 
@@ -31,6 +39,7 @@ export class GithubSyncService {
     }
 
     await this.repository.upsertEngineers([...engineerUsernames]);
+    await this.repository.setLastSyncedAt(repositoryId, syncStartedAt);
 
     return { repository: rawRepo.fullName, pullRequestsSynced: pullRequestsData.length };
   }

@@ -60,5 +60,5 @@ export interface RepositorySyncResult {
  */
 export interface ISourceControlClient {
   getRepository(owner: string, repo: string): Promise<RawRepository>;
-  getRepositoryPullRequests(owner: string, repo: string): Promise<PullRequestSyncData[]>;
+  getRepositoryPullRequests(owner: string, repo: string, since?: Date): Promise<PullRequestSyncData[]>;
 }

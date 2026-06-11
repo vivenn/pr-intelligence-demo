@@ -12,9 +12,10 @@ model Repository {
   externalId String   @unique
   name       String
   fullName   String   @unique
-  provider   String   @default("github")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  provider     String   @default("github")
+  lastSyncedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   pullRequests PullRequest[]
 

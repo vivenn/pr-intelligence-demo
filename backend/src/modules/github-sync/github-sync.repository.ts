@@ -2,7 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { RawCommit, RawPullRequest, RawRepository, RawReview, RawReviewComment } from './github-sync.types';
 
 export interface IGithubSyncRepository {
+  getSyncState(externalId: string): Promise<{ lastSyncedAt: Date | null } | null>;
   upsertRepository(raw: RawRepository): Promise<{ id: string }>;
+  setLastSyncedAt(repositoryId: string, syncedAt: Date): Promise<void>;
   upsertPullRequest(repositoryId: string, raw: RawPullRequest): Promise<{ id: string }>;
   replacePullRequestDetails(
     pullRequestId: string,
@@ -13,6 +15,20 @@ export interface IGithubSyncRepository {
 
 export class GithubSyncRepository implements IGithubSyncRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async getSyncState(externalId: string): Promise<{ lastSyncedAt: Date | null } | null> {
+    return this.prisma.repository.findUnique({
+      where: { externalId },
+      select: { lastSyncedAt: true },
+    });
+  }
+
+  async setLastSyncedAt(repositoryId: string, syncedAt: Date): Promise<void> {
+    await this.prisma.repository.update({
+      where: { id: repositoryId },
+      data: { lastSyncedAt: syncedAt },
+    });
+  }
 
   async upsertRepository(raw: RawRepository): Promise<{ id: string }> {
     return this.prisma.repository.upsert({

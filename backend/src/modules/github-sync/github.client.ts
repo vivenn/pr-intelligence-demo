@@ -9,7 +9,8 @@ import {
   RawPullRequest,
 } from './github-sync.types';
 
-const DEFAULT_MAX_PULL_REQUESTS = 30;
+const DEFAULT_MAX_PULL_REQUESTS = 100;
+const SUB_RESOURCE_PAGE_SIZE = 100;
 
 export class GithubClient implements ISourceControlClient {
   constructor(
@@ -22,7 +23,12 @@ export class GithubClient implements ISourceControlClient {
     return { id: data.id, name: data.name, fullName: data.full_name };
   }
 
-  async getRepositoryPullRequests(owner: string, repo: string): Promise<PullRequestSyncData[]> {
+  /**
+   * @param since When provided, only PRs updated at/after this time are returned.
+   *   PRs come back sorted by `updated` descending, so we stop as soon as we cross
+   *   the watermark — this is what makes incremental syncs cheap.
+   */
+  async getRepositoryPullRequests(owner: string, repo: string, since?: Date): Promise<PullRequestSyncData[]> {
     const { data: pulls } = await this.octokit.pulls.list({
       owner,
       repo,
@@ -35,6 +41,9 @@ export class GithubClient implements ISourceControlClient {
     const results: PullRequestSyncData[] = [];
 
     for (const pull of pulls) {
+      // Sorted updated-desc: once we pass the last-sync watermark, everything older is unchanged.
+      if (since && new Date(pull.updated_at) < since) break;
+
       const { data: detail } = await this.octokit.pulls.get({ owner, repo, pull_number: pull.number });
 
       const pullRequest: RawPullRequest = {
@@ -80,7 +89,12 @@ export class GithubClient implements ISourceControlClient {
     repo: string,
     pullNumber: number,
   ): Promise<{ reviews: RawReview[]; bodyComments: RawReviewComment[] }> {
-    const { data } = await this.octokit.pulls.listReviews({ owner, repo, pull_number: pullNumber });
+    const { data } = await this.octokit.pulls.listReviews({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      per_page: SUB_RESOURCE_PAGE_SIZE,
+    });
 
     const reviews: RawReview[] = data.map((review) => ({
       id: review.id,
@@ -102,7 +116,12 @@ export class GithubClient implements ISourceControlClient {
 
   /** Inline comments on the diff (Files changed tab). */
   private async getReviewComments(owner: string, repo: string, pullNumber: number): Promise<RawReviewComment[]> {
-    const { data } = await this.octokit.pulls.listReviewComments({ owner, repo, pull_number: pullNumber });
+    const { data } = await this.octokit.pulls.listReviewComments({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      per_page: SUB_RESOURCE_PAGE_SIZE,
+    });
 
     return data.map((comment) => ({
       externalId: `review:${comment.id}`,
@@ -113,7 +132,12 @@ export class GithubClient implements ISourceControlClient {
 
   /** Conversation comments on the PR (the issue-comment thread). */
   private async getIssueComments(owner: string, repo: string, pullNumber: number): Promise<RawReviewComment[]> {
-    const { data } = await this.octokit.issues.listComments({ owner, repo, issue_number: pullNumber });
+    const { data } = await this.octokit.issues.listComments({
+      owner,
+      repo,
+      issue_number: pullNumber,
+      per_page: SUB_RESOURCE_PAGE_SIZE,
+    });
 
     return data.map((comment) => ({
       externalId: `issue:${comment.id}`,
@@ -123,7 +147,12 @@ export class GithubClient implements ISourceControlClient {
   }
 
   private async getCommits(owner: string, repo: string, pullNumber: number): Promise<RawCommit[]> {
-    const { data } = await this.octokit.pulls.listCommits({ owner, repo, pull_number: pullNumber });
+    const { data } = await this.octokit.pulls.listCommits({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      per_page: SUB_RESOURCE_PAGE_SIZE,
+    });
 
     return data.map((commit) => ({
       sha: commit.sha,

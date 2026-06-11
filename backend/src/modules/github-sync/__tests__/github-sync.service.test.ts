@@ -37,7 +37,9 @@ describe('GithubSyncService', () => {
     } as unknown as jest.Mocked<GithubClient>;
 
     const repository: jest.Mocked<IGithubSyncRepository> = {
+      getSyncState: jest.fn().mockResolvedValue(null),
       upsertRepository: jest.fn().mockResolvedValue({ id: 'repo-id' }),
+      setLastSyncedAt: jest.fn().mockResolvedValue(undefined),
       upsertPullRequest: jest.fn().mockResolvedValue({ id: 'pr-id' }),
       replacePullRequestDetails: jest.fn().mockResolvedValue(undefined),
       upsertEngineers: jest.fn().mockResolvedValue(undefined),
@@ -53,7 +55,7 @@ describe('GithubSyncService', () => {
     const result = await service.syncRepository(repoName);
 
     expect(githubClient.getRepository).toHaveBeenCalledWith(org, repoName);
-    expect(githubClient.getRepositoryPullRequests).toHaveBeenCalledWith(org, repoName);
+    expect(githubClient.getRepositoryPullRequests).toHaveBeenCalledWith(org, repoName, undefined);
 
     expect(repository.upsertRepository).toHaveBeenCalledWith(rawRepo);
     expect(repository.upsertPullRequest).toHaveBeenCalledWith('repo-id', pullRequestData.pullRequest);
@@ -64,6 +66,18 @@ describe('GithubSyncService', () => {
     });
 
     expect(result).toEqual({ repository: `${org}/${repoName}`, pullRequestsSynced: 1 });
+  });
+
+  it('passes the stored watermark as the incremental "since" and advances it after sync', async () => {
+    const { githubClient, repository } = createMocks();
+    const lastSyncedAt = new Date('2026-01-05T00:00:00Z');
+    repository.getSyncState.mockResolvedValue({ lastSyncedAt });
+    const service = new GithubSyncService(githubClient, repository, org);
+
+    await service.syncRepository(repoName);
+
+    expect(githubClient.getRepositoryPullRequests).toHaveBeenCalledWith(org, repoName, lastSyncedAt);
+    expect(repository.setLastSyncedAt).toHaveBeenCalledWith('repo-id', expect.any(Date));
   });
 
   it('collects unique engineer usernames from authors, reviewers, commenters, and committers', async () => {
