@@ -13,6 +13,10 @@ import { PullRequestController } from './modules/pull-requests/pull-requests.con
 import { PullRequestRepository } from './modules/pull-requests/pull-requests.repository';
 import { PullRequestService } from './modules/pull-requests/pull-requests.service';
 import { createPullRequestRoutes } from './modules/pull-requests/pull-requests.routes';
+import { EngineerController } from './modules/engineers/engineers.controller';
+import { EngineerRepository } from './modules/engineers/engineers.repository';
+import { EngineerService } from './modules/engineers/engineers.service';
+import { createEngineerRoutes } from './modules/engineers/engineers.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -37,6 +41,12 @@ export function createApp(): Express {
   const pullRequestController = new PullRequestController(pullRequestService);
 
   app.use('/api/pull-requests', createPullRequestRoutes(pullRequestController));
+
+  const engineerRepository = new EngineerRepository(prisma);
+  const engineerService = new EngineerService(engineerRepository);
+  const engineerController = new EngineerController(engineerService);
+
+  app.use('/api/engineers', createEngineerRoutes(engineerController));
 
   app.use(errorHandler);
 
