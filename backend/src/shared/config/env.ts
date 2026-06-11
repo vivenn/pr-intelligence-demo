@@ -15,6 +15,11 @@ const envSchema = z.object({
     .transform((value) => value.split(',').map((repo) => repo.trim()).filter(Boolean)),
   // Optional cron expression for scheduled sync (e.g. "*/30 * * * *"). Unset = manual sync only.
   SYNC_CRON: z.string().trim().min(1).optional(),
+  // Comma-separated list of allowed frontend origins for CORS (no wildcard in production).
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:5173')
+    .transform((value) => value.split(',').map((origin) => origin.trim()).filter(Boolean)),
 });
 
 const parsed = envSchema.safeParse(process.env);

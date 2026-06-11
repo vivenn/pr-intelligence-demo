@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { parsePagination } from '../../shared/utils/pagination';
+import { paginationSchema, uuidParamSchema } from '../../shared/validation/schemas';
+import { validate } from '../../shared/validation/validate';
 import { RepositoryService } from './repositories.service';
 
 export class RepositoryController {
@@ -7,9 +8,9 @@ export class RepositoryController {
 
   list = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const pagination = parsePagination(req.query);
-      const { items, total } = await this.service.listRepositories(pagination);
-      res.json({ data: items, meta: { ...pagination, total } });
+      const { page, pageSize } = validate(paginationSchema, req.query);
+      const { items, total } = await this.service.listRepositories({ page, pageSize });
+      res.json({ data: items, meta: { page, pageSize, total } });
     } catch (err) {
       next(err);
     }
@@ -17,7 +18,8 @@ export class RepositoryController {
 
   getSummary = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const summary = await this.service.getRepositorySummary(req.params.id);
+      const { id } = validate(uuidParamSchema, req.params);
+      const summary = await this.service.getRepositorySummary(id);
       res.json({ data: summary });
     } catch (err) {
       next(err);

@@ -9,8 +9,10 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return;
   }
 
-  const message = err instanceof Error ? err.message : 'Internal server error';
+  // Log full detail server-side only; never leak internal messages, stack traces,
+  // or DB errors to the client.
+  console.error('Unhandled error:', err);
   res.status(500).json({
-    error: { message, code: 'INTERNAL_SERVER_ERROR' },
+    error: { message: 'Internal server error', code: 'INTERNAL_SERVER_ERROR' },
   });
 }

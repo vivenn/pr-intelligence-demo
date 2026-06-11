@@ -22,7 +22,7 @@ import { createRepositoryRoutes } from './modules/repositories/repositories.rout
 export function createApp(): Express {
   const app = express();
 
-  app.use(cors());
+  app.use(cors({ origin: env.CORS_ORIGINS }));
   app.use(express.json());
 
   app.get('/health', (_req: Request, res: Response) => {

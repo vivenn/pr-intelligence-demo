@@ -22,15 +22,19 @@ describe('errorHandler', () => {
     });
   });
 
-  it('formats unknown errors as 500 internal server errors', () => {
+  it('does not leak internal error messages on unknown errors', () => {
     const res = createMockResponse();
-    const error = new Error('boom');
+    const error = new Error('connect ECONNREFUSED 127.0.0.1:5432 (DB internals)');
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     errorHandler(error, {} as Request, res, jest.fn());
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: { message: 'boom', code: 'INTERNAL_SERVER_ERROR' },
+      error: { message: 'Internal server error', code: 'INTERNAL_SERVER_ERROR' },
     });
+    // The raw message is logged server-side, never sent to the client.
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
