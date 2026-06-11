@@ -9,6 +9,10 @@ import { GithubClient } from './modules/github-sync/github.client';
 import { GithubSyncRepository } from './modules/github-sync/github-sync.repository';
 import { GithubSyncService } from './modules/github-sync/github-sync.service';
 import { createGithubSyncRoutes } from './modules/github-sync/github-sync.routes';
+import { PullRequestController } from './modules/pull-requests/pull-requests.controller';
+import { PullRequestRepository } from './modules/pull-requests/pull-requests.repository';
+import { PullRequestService } from './modules/pull-requests/pull-requests.service';
+import { createPullRequestRoutes } from './modules/pull-requests/pull-requests.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -27,6 +31,12 @@ export function createApp(): Express {
   const githubSyncController = new GithubSyncController(githubSyncService, env.GITHUB_REPOS);
 
   app.use('/api/github', createGithubSyncRoutes(githubSyncController));
+
+  const pullRequestRepository = new PullRequestRepository(prisma);
+  const pullRequestService = new PullRequestService(pullRequestRepository);
+  const pullRequestController = new PullRequestController(pullRequestService);
+
+  app.use('/api/pull-requests', createPullRequestRoutes(pullRequestController));
 
   app.use(errorHandler);
 
