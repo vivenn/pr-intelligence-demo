@@ -18,6 +18,12 @@ export function computeSizeBucket(linesChanged: number): SizeBucket {
   return 'XL';
 }
 
+/** A PR is considered "large" (review-risk) once it falls in the L or XL size buckets. */
+export function isLargePullRequest(linesChanged: number): boolean {
+  const bucket = computeSizeBucket(linesChanged);
+  return bucket === 'L' || bucket === 'XL';
+}
+
 export function computeTimeToFirstReviewHours(pr: PullRequestWithRelations): number | null {
   if (pr.reviews.length === 0) return null;
 
