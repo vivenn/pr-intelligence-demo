@@ -17,6 +17,10 @@ import { EngineerController } from './modules/engineers/engineers.controller';
 import { EngineerRepository } from './modules/engineers/engineers.repository';
 import { EngineerService } from './modules/engineers/engineers.service';
 import { createEngineerRoutes } from './modules/engineers/engineers.routes';
+import { RepositoryController } from './modules/repositories/repositories.controller';
+import { RepositoryRepository } from './modules/repositories/repositories.repository';
+import { RepositoryService } from './modules/repositories/repositories.service';
+import { createRepositoryRoutes } from './modules/repositories/repositories.routes';
 
 export function createApp(): Express {
   const app = express();
@@ -47,6 +51,12 @@ export function createApp(): Express {
   const engineerController = new EngineerController(engineerService);
 
   app.use('/api/engineers', createEngineerRoutes(engineerController));
+
+  const repositoryRepository = new RepositoryRepository(prisma);
+  const repositoryService = new RepositoryService(repositoryRepository);
+  const repositoryController = new RepositoryController(repositoryService);
+
+  app.use('/api/repositories', createRepositoryRoutes(repositoryController));
 
   app.use(errorHandler);
 
