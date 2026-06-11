@@ -52,3 +52,13 @@ export interface RepositorySyncResult {
   repository: string;
   pullRequestsSynced: number;
 }
+
+/**
+ * Provider-agnostic source-control client contract. `GithubClient` implements this today;
+ * a future `GitlabClient` would implement the same interface, and the sync service —
+ * which depends on this interface, not the concrete class — would not change.
+ */
+export interface ISourceControlClient {
+  getRepository(owner: string, repo: string): Promise<RawRepository>;
+  getRepositoryPullRequests(owner: string, repo: string): Promise<PullRequestSyncData[]>;
+}

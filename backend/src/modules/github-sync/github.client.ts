@@ -1,5 +1,6 @@
 import { Octokit } from '@octokit/rest';
 import {
+  ISourceControlClient,
   PullRequestSyncData,
   RawCommit,
   RawRepository,
@@ -10,7 +11,7 @@ import {
 
 const DEFAULT_MAX_PULL_REQUESTS = 30;
 
-export class GithubClient {
+export class GithubClient implements ISourceControlClient {
   constructor(
     private readonly octokit: Octokit,
     private readonly maxPullRequests: number = DEFAULT_MAX_PULL_REQUESTS,

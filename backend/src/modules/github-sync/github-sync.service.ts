@@ -1,19 +1,18 @@
-import { GithubClient } from './github.client';
 import { IGithubSyncRepository } from './github-sync.repository';
-import { RepositorySyncResult } from './github-sync.types';
+import { ISourceControlClient, RepositorySyncResult } from './github-sync.types';
 
 export class GithubSyncService {
   constructor(
-    private readonly githubClient: GithubClient,
+    private readonly client: ISourceControlClient,
     private readonly repository: IGithubSyncRepository,
     private readonly org: string,
   ) {}
 
   async syncRepository(repoName: string): Promise<RepositorySyncResult> {
-    const rawRepo = await this.githubClient.getRepository(this.org, repoName);
+    const rawRepo = await this.client.getRepository(this.org, repoName);
     const { id: repositoryId } = await this.repository.upsertRepository(rawRepo);
 
-    const pullRequestsData = await this.githubClient.getRepositoryPullRequests(this.org, repoName);
+    const pullRequestsData = await this.client.getRepositoryPullRequests(this.org, repoName);
 
     const engineerUsernames = new Set<string>();
 
