@@ -11,6 +11,12 @@ export interface RepositorySummarySource {
   commentCount: number;
 }
 
+/** A single point in a weekly throughput series. `week` is the ISO date of that week's Monday. */
+export interface WeeklyThroughputPoint {
+  week: string;
+  merged: number;
+}
+
 export interface RepositorySummaryMetrics {
   totalPullRequests: number;
   mergedPullRequests: number;
@@ -19,6 +25,7 @@ export interface RepositorySummaryMetrics {
   avgPullRequestSize: number | null;
   totalReviews: number;
   totalComments: number;
+  throughputByWeek: WeeklyThroughputPoint[];
 }
 
 export interface RepositoryProfile {

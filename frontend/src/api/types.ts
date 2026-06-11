@@ -60,6 +60,11 @@ export interface RepositoryProfile {
   fullName: string;
 }
 
+export interface WeeklyThroughputPoint {
+  week: string;
+  merged: number;
+}
+
 export interface RepositorySummaryMetrics {
   totalPullRequests: number;
   mergedPullRequests: number;
@@ -68,6 +73,7 @@ export interface RepositorySummaryMetrics {
   avgPullRequestSize: number | null;
   totalReviews: number;
   totalComments: number;
+  throughputByWeek: WeeklyThroughputPoint[];
 }
 
 export interface RepositorySummary extends RepositoryProfile {

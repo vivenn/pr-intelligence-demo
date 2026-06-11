@@ -1,8 +1,28 @@
 import { useState } from 'react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { api } from '../api/client';
 import { AsyncBoundary, Card, MetricStat, formatHours, formatNumber } from '../components/common';
 import { useAsync } from '../hooks/useAsync';
 import { RepositoryCharts } from './RepositoryCharts';
+
+function ThroughputTrend({ data }: { data: { week: string; merged: number }[] }) {
+  if (data.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <h4 style={{ margin: '0 0 8px', fontSize: 14, color: '#374151' }}>Throughput — PRs merged per week</h4>
+      <ResponsiveContainer width="100%" height={200}>
+        <AreaChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="week" fontSize={12} />
+          <YAxis allowDecimals={false} fontSize={12} />
+          <Tooltip />
+          <Area type="monotone" dataKey="merged" stroke="#4f46e5" fill="#c7d2fe" />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 function RepositorySummary({ id }: { id: string }) {
   const state = useAsync(() => api.getRepositorySummary(id), [id]);
@@ -20,6 +40,7 @@ function RepositorySummary({ id }: { id: string }) {
             <MetricStat label="Reviews" value={repo.metrics.totalReviews} />
             <MetricStat label="Comments" value={repo.metrics.totalComments} />
           </div>
+          <ThroughputTrend data={repo.metrics.throughputByWeek} />
           <RepositoryCharts repoId={repo.id} />
         </Card>
       )}
