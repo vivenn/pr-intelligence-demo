@@ -18,10 +18,16 @@ export function computeSizeBucket(linesChanged: number): SizeBucket {
   return 'XL';
 }
 
-export function computeTimeToFirstReviewHours(pr: PullRequestWithRelations): number | null {
-  if (pr.reviews.length === 0) return null;
+/** Reviews by someone other than the PR author — self-reviews are not peer review. */
+export function peerReviews(pr: PullRequestWithRelations): PullRequestWithRelations['reviews'] {
+  return pr.reviews.filter((review) => review.reviewerLogin !== pr.authorLogin);
+}
 
-  const firstReviewAt = pr.reviews
+export function computeTimeToFirstReviewHours(pr: PullRequestWithRelations): number | null {
+  const reviews = peerReviews(pr);
+  if (reviews.length === 0) return null;
+
+  const firstReviewAt = reviews
     .map((review) => review.submittedAt)
     .reduce((earliest, current) => (current < earliest ? current : earliest));
 
@@ -45,7 +51,7 @@ export function computePullRequestMetrics(pr: PullRequestWithRelations): PullReq
   return {
     timeToFirstReviewHours: computeTimeToFirstReviewHours(pr),
     timeToMergeHours: computeTimeToMergeHours(pr),
-    reviewCount: pr.reviews.length,
+    reviewCount: peerReviews(pr).length,
     commentCount,
     linesChanged,
     changedFiles: pr.changedFiles,

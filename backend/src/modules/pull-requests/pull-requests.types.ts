@@ -17,7 +17,7 @@ export interface PullRequestWithRelations {
   additions: number;
   deletions: number;
   changedFiles: number;
-  reviews: { submittedAt: Date }[];
+  reviews: { submittedAt: Date; reviewerLogin: string }[];
   reviewComments: { id: string }[];
 }
 

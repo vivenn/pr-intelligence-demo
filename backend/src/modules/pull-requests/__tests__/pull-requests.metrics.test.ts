@@ -56,16 +56,40 @@ describe('computeTimeToFirstReviewHours', () => {
     expect(computeTimeToFirstReviewHours(buildPullRequest({ reviews: [] }))).toBeNull();
   });
 
-  it('uses the earliest review submission time', () => {
+  it('uses the earliest peer review submission time', () => {
     const pr = buildPullRequest({
+      authorLogin: 'alice',
       createdAt: new Date('2026-01-01T00:00:00Z'),
       reviews: [
-        { submittedAt: new Date('2026-01-01T10:00:00Z') },
-        { submittedAt: new Date('2026-01-01T04:00:00Z') },
+        { submittedAt: new Date('2026-01-01T10:00:00Z'), reviewerLogin: 'bob' },
+        { submittedAt: new Date('2026-01-01T04:00:00Z'), reviewerLogin: 'carol' },
       ],
     });
 
     expect(computeTimeToFirstReviewHours(pr)).toBe(4);
+  });
+
+  it('ignores the author self-reviewing their own PR', () => {
+    const pr = buildPullRequest({
+      authorLogin: 'alice',
+      createdAt: new Date('2026-01-01T00:00:00Z'),
+      reviews: [
+        { submittedAt: new Date('2026-01-01T02:00:00Z'), reviewerLogin: 'alice' }, // self-review
+        { submittedAt: new Date('2026-01-01T05:00:00Z'), reviewerLogin: 'bob' }, // peer
+      ],
+    });
+
+    // First *peer* review is bob's at +5h, not alice's self-review at +2h.
+    expect(computeTimeToFirstReviewHours(pr)).toBe(5);
+  });
+
+  it('returns null when the only review is a self-review', () => {
+    const pr = buildPullRequest({
+      authorLogin: 'alice',
+      reviews: [{ submittedAt: new Date('2026-01-01T02:00:00Z'), reviewerLogin: 'alice' }],
+    });
+
+    expect(computeTimeToFirstReviewHours(pr)).toBeNull();
   });
 });
 
@@ -102,7 +126,7 @@ describe('computePullRequestMetrics', () => {
       additions: 60,
       deletions: 40,
       changedFiles: 5,
-      reviews: [{ submittedAt: new Date('2026-01-01T03:00:00Z') }],
+      reviews: [{ submittedAt: new Date('2026-01-01T03:00:00Z'), reviewerLogin: 'bob' }],
       reviewComments: [{ id: 'c1' }, { id: 'c2' }],
     });
 

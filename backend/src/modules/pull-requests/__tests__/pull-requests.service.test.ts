@@ -17,7 +17,7 @@ function buildPullRequest(overrides: Partial<PullRequestWithRelations> = {}): Pu
     additions: 30,
     deletions: 20,
     changedFiles: 4,
-    reviews: [{ submittedAt: new Date('2026-01-01T03:00:00Z') }],
+    reviews: [{ submittedAt: new Date('2026-01-01T03:00:00Z'), reviewerLogin: 'bob' }],
     reviewComments: [{ id: 'c1' }],
     ...overrides,
   };

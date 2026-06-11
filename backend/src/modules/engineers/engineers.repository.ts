@@ -40,8 +40,13 @@ export class EngineerRepository implements IEngineerRepository {
         where: { authorLogin: username },
         select: { createdAt: true, mergedAt: true, additions: true, deletions: true },
       }),
-      this.prisma.review.count({ where: { reviewerLogin: username } }),
-      this.prisma.review.count({ where: { pullRequest: { authorLogin: username } } }),
+      // Exclude self-reviews (reviewing one's own PR) from both directions of review load.
+      this.prisma.review.count({
+        where: { reviewerLogin: username, pullRequest: { authorLogin: { not: username } } },
+      }),
+      this.prisma.review.count({
+        where: { pullRequest: { authorLogin: username }, reviewerLogin: { not: username } },
+      }),
     ]);
 
     return { authoredPullRequests, reviewsGivenCount, reviewsReceivedCount };

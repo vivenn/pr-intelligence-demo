@@ -16,7 +16,7 @@ export interface IPullRequestRepository {
 }
 
 const relationsSelect = {
-  reviews: { select: { submittedAt: true } },
+  reviews: { select: { submittedAt: true, reviewerLogin: true } },
   reviewComments: { select: { id: true } },
 } as const;
 
