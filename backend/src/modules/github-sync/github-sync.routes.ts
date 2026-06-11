@@ -5,6 +5,7 @@ export function createGithubSyncRoutes(controller: GithubSyncController): Router
   const router = Router();
 
   router.post('/sync', controller.triggerSync);
+  router.get('/sync/status', controller.getStatus);
 
   return router;
 }

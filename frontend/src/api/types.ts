@@ -78,3 +78,13 @@ export interface SyncResult {
   repository: string;
   pullRequestsSynced: number;
 }
+
+export type SyncStatus = 'idle' | 'running' | 'completed' | 'failed';
+
+export interface SyncState {
+  status: SyncStatus;
+  startedAt: string | null;
+  finishedAt: string | null;
+  result: SyncResult[] | null;
+  error: string | null;
+}

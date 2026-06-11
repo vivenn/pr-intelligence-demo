@@ -35,12 +35,26 @@ export function RepositoriesPage() {
 
   async function handleSync() {
     setSyncing(true);
-    setSyncMessage(null);
+    setSyncMessage('Sync started…');
     try {
-      const res = await api.triggerSync();
-      const total = res.data.reduce((sum, r) => sum + r.pullRequestsSynced, 0);
-      setSyncMessage(`Synced ${res.data.length} repo(s), ${total} pull request(s).`);
-      setRefreshKey((k) => k + 1);
+      await api.triggerSync(); // returns 202 immediately; sync runs in the background
+
+      // Poll the status endpoint until the background sync finishes.
+      for (;;) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const { data: state } = await api.getSyncStatus();
+
+        if (state.status === 'completed') {
+          const total = (state.result ?? []).reduce((sum, r) => sum + r.pullRequestsSynced, 0);
+          setSyncMessage(`Synced ${state.result?.length ?? 0} repo(s), ${total} pull request(s).`);
+          setRefreshKey((k) => k + 1);
+          break;
+        }
+        if (state.status === 'failed') {
+          setSyncMessage(`Sync failed: ${state.error ?? 'unknown error'}`);
+          break;
+        }
+      }
     } catch (err) {
       setSyncMessage(`Sync failed: ${(err as Error).message}`);
     } finally {

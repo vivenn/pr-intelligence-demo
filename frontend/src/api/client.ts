@@ -6,7 +6,7 @@ import {
   PullRequestSummary,
   RepositoryProfile,
   RepositorySummary,
-  SyncResult,
+  SyncState,
 } from './types';
 
 const BASE = '/api';
@@ -51,5 +51,7 @@ export const api = {
 
   getRepositorySummary: (id: string) => request<ApiItem<RepositorySummary>>(`/repositories/${id}/summary`),
 
-  triggerSync: () => request<{ data: SyncResult[] }>('/github/sync', { method: 'POST' }),
+  triggerSync: () => request<{ data: { status: string } }>('/github/sync', { method: 'POST' }),
+
+  getSyncStatus: () => request<ApiItem<SyncState>>('/github/sync/status'),
 };
