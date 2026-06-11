@@ -3,7 +3,6 @@ export type SizeBucket = 'XS' | 'S' | 'M' | 'L' | 'XL';
 /**
  * A pull request with the related rows needed to compute metrics.
  * Returned by the repository, consumed by the metrics functions/service.
- * Changes for PR Intelligence System
  */
 export interface PullRequestWithRelations {
   id: string;
