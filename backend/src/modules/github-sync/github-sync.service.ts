@@ -9,6 +9,10 @@ export class GithubSyncService {
     private readonly org: string,
   ) {}
 
+  /**
+   * Syncs a single repository: upserts the repo, its pull requests and their
+   * reviews/comments/commits, and the engineers derived from those records.
+   */
   async syncRepository(repoName: string): Promise<RepositorySyncResult> {
     const rawRepo = await this.githubClient.getRepository(this.org, repoName);
     const { id: repositoryId } = await this.repository.upsertRepository(rawRepo);
