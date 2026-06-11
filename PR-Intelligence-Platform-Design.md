@@ -86,7 +86,9 @@ Computed in the **application layer as pure, isolated functions** (one `*.metric
 - Avg PR size
 - Review load given vs. received
 
-*(Planned extensions: throughput per week, rework rate — commits pushed after first review.)*
+**Repository-level**: PR state breakdown, size distribution, and **weekly throughput trend** (PRs merged per week).
+
+*(Planned extension: rework rate — commits pushed after first review.)*
 
 ### AI Insight Layer (Future Enhancement)
 
