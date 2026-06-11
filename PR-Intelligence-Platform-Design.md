@@ -74,18 +74,19 @@
 
 ### Metrics layer
 
-Computed via SQL views/materialized views (refreshed after each sync) rather than application code, so they stay close to the data and are easy to query/extend:
+Computed in the **application layer as pure, isolated functions** (one `*.metrics.ts` per domain module), which keeps the highest-risk logic trivial to unit-test exhaustively without a database. As data volume grows, hot aggregations can move into SQL/materialized views refreshed after each sync (see tradeoffs):
 
 **PR-level**:
-- Time to first review, time to merge, total review cycles (re-requested reviews)
+- Time to first review, time to merge, review count
 - PR size (lines changed, files changed) and a size bucket (XS/S/M/L/XL)
-- Comment density (comments per 100 lines changed)
+- Comment count and density (across conversation, inline, and review-summary feedback)
 
 **Engineer-level**:
-- Avg/median cycle time (open → merge)
-- Throughput (PRs merged per week)
+- Total / merged PRs, avg & median cycle time (open → merge)
+- Avg PR size
 - Review load given vs. received
-- Avg PR size, rework rate (commits pushed after first review)
+
+*(Planned extensions: throughput per week, rework rate — commits pushed after first review.)*
 
 ### AI Insight Layer (Future Enhancement)
 
@@ -102,10 +103,10 @@ On top of the deterministic metrics, a hybrid AI layer can generate higher-level
 
 **In scope**:
 - Connect to one GitHub org/repo set via PAT
-- Manual "Sync Now" + scheduled cron sync (ingest PRs, reviews, comments, commits)
-- Postgres schema + metrics views as above
-- REST API: list PRs with computed metrics, per-engineer summary, repo-level summary
-- React dashboard: PR list/detail view with metrics, engineer leaderboard/profile view, basic date-range filter
+- Manual "Sync Now" trigger + optional scheduled cron sync (ingest PRs, reviews, comments, commits)
+- Postgres schema + metrics computed in the service layer
+- REST API: list PRs with computed metrics, per-engineer profile, repo-level summary
+- React dashboard: PR table (with links to GitHub), engineer profiles with charts, repo summaries with size/state distribution charts
 
 **Explicitly out of scope for MVP** (called out as future work):
 - GitLab/Bitbucket adapters
@@ -121,12 +122,14 @@ On top of the deterministic metrics, a hybrid AI layer can generate higher-level
 **Stack**: Node.js + Express, PostgreSQL + Prisma (ORM + migrations), React (Vite) + Recharts, Octokit for GitHub API.
 
 **Phased delivery**:
-1. **Schema & ingestion**: Prisma schema, sync service pulling PRs/reviews/commits for configured repos, idempotent upserts (by external GitHub IDs).
-2. **Metrics**: SQL views for the metrics above; expose via Express endpoints.
-3. **API**: REST endpoints — `GET /api/prs`, `GET /api/prs/:id`, `GET /api/engineers`, `GET /api/engineers/:id`, `GET /api/repos/:id/summary`, `POST /api/sync`.
-4. **Dashboard**: React app — PR table (sortable/filterable), PR detail with timeline, engineer profile with trend charts.
+1. **Schema & ingestion**: Prisma schema, sync service pulling PRs/reviews/comments/commits for configured repos, idempotent upserts (by external GitHub IDs).
+2. **Metrics**: pure functions per domain (unit-tested with mocked repositories); exposed via the service layer.
+3. **API**: REST endpoints — `GET /api/pull-requests`, `GET /api/pull-requests/:id`, `GET /api/engineers`, `GET /api/engineers/:username`, `GET /api/repositories`, `GET /api/repositories/:id/summary`, `POST /api/github/sync`.
+4. **Dashboard**: React app — PR table (with GitHub links), engineer profiles with charts, repo summaries with size/state distribution charts.
 
-**Why this order**: Data model and ingestion are the foundation everything else depends on; getting raw data correct early de-risks the metrics layer, which is mostly SQL and can iterate quickly once data is in place.
+**Why this order**: Data model and ingestion are the foundation everything else depends on; getting raw data correct early de-risks the metrics layer, which can then iterate quickly once data is in place.
+
+> A working reference implementation of this MVP has been built (Node/Express + Prisma + React), with unit tests covering the metric-calculation logic and validated against a live GitHub repository.
 
 ---
 
@@ -135,7 +138,7 @@ On top of the deterministic metrics, a hybrid AI layer can generate higher-level
 | Decision | Tradeoff | Rationale |
 |---|---|---|
 | Polling vs. webhooks | Polling is simpler, no public endpoint needed, slightly stale data | Acceptable for MVP; webhooks + queue (BullMQ/Redis) are the natural next step for real-time, high-volume orgs |
-| SQL views vs. precomputed/cached metrics | Views recompute on read; simpler but can get slow at scale | Fine for MVP data volumes; move to materialized views (refreshed post-sync) or scheduled aggregation jobs as data grows |
+| App-layer metric functions vs. SQL views | Computing in code recomputes on read and pulls rows into the app; simpler and unit-testable, but can get slow at scale | Chose pure functions for testability/DRY at MVP volumes; move hot aggregations to materialized views (refreshed post-sync) or scheduled aggregation jobs as data grows |
 | Single-tenant (PAT) vs. OAuth multi-tenant | PAT is simplest but not scalable to many users/orgs | Flagged as a clear, isolated upgrade path (swap auth layer, add org_id scoping) |
 | Express monolith vs. separate sync worker | Monolith is simpler to deploy/run for MVP | At scale, split sync into a separate worker process/service so ingestion load doesn't impact API latency |
 | GitHub API rate limits | Large orgs/repos can hit rate limits during full sync | Use incremental sync (only fetch PRs updated since last sync via `updated_at` filter) and GraphQL to batch requests |
