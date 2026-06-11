@@ -103,7 +103,18 @@ tests/
 - Responses: `{ data: ... }` for success, `{ error: { message, code } }` for failures.
 - Pagination via `?page=&pageSize=` query params, returned as `{ data, meta: { page, pageSize, total } }`.
 
-## 6. Future Microservices Path
+## 6. Security
+
+- **Secrets**: never commit `.env` or tokens. `.env` is gitignored; only `.env.example` (placeholder values) is checked in. All env vars validated/loaded centrally via `src/shared/config/env.ts`.
+- **GitHub token scope**: use the minimum PAT scopes needed (read-only repo access). Never log the token or echo it in error messages/responses.
+- **Input validation**: validate all request params/query/body with `zod` at the controller boundary before passing to services. Reject unknown/malformed input with `BadRequestError`/`ValidationError`.
+- **DB access**: all queries go through Prisma (parameterized) — no raw string-concatenated SQL. If raw SQL is needed for metrics views, use Prisma's tagged-template `$queryRaw` (parameterized), never string interpolation of user input.
+- **Error responses**: never leak stack traces, internal file paths, or DB error details to API responses — `error-handler.middleware.ts` returns only `{ message, code }`. Full error details may be logged server-side only.
+- **CORS**: restrict to known frontend origin(s) via config once a frontend URL is known; avoid wildcard `*` in production.
+- **Dependencies**: keep an eye on `npm audit` output for new dependencies; avoid adding packages with known high/critical vulnerabilities.
+- **Engineer-level data**: treat as sensitive — see design doc framing (process-health, not performance ranking). Don't expose engineer metrics on unauthenticated routes once auth is introduced.
+
+## 7. Future Microservices Path
 
 Because each module is self-contained (own routes/controller/service/repository, communicates via interfaces), the extraction path is:
 1. Move a module folder to its own service/repo.
