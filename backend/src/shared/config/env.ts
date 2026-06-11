@@ -13,6 +13,8 @@ const envSchema = z.object({
     .string()
     .min(1, 'GITHUB_REPOS is required')
     .transform((value) => value.split(',').map((repo) => repo.trim()).filter(Boolean)),
+  // Optional cron expression for scheduled sync (e.g. "*/30 * * * *"). Unset = manual sync only.
+  SYNC_CRON: z.string().trim().min(1).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

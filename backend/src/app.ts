@@ -1,13 +1,10 @@
-import { Octokit } from '@octokit/rest';
 import cors from 'cors';
 import express, { Express, Request, Response } from 'express';
 import { env } from './shared/config/env';
 import { prisma } from './shared/db/prisma';
 import { errorHandler } from './shared/errors/error-handler.middleware';
 import { GithubSyncController } from './modules/github-sync/github-sync.controller';
-import { GithubClient } from './modules/github-sync/github.client';
-import { GithubSyncRepository } from './modules/github-sync/github-sync.repository';
-import { GithubSyncService } from './modules/github-sync/github-sync.service';
+import { createGithubSyncService } from './modules/github-sync/github-sync.factory';
 import { createGithubSyncRoutes } from './modules/github-sync/github-sync.routes';
 import { PullRequestController } from './modules/pull-requests/pull-requests.controller';
 import { PullRequestRepository } from './modules/pull-requests/pull-requests.repository';
@@ -32,10 +29,10 @@ export function createApp(): Express {
     res.json({ data: { status: 'ok' } });
   });
 
-  const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
-  const githubClient = new GithubClient(octokit);
-  const githubSyncRepository = new GithubSyncRepository(prisma);
-  const githubSyncService = new GithubSyncService(githubClient, githubSyncRepository, env.GITHUB_ORG);
+  const githubSyncService = createGithubSyncService(prisma, {
+    githubToken: env.GITHUB_TOKEN,
+    org: env.GITHUB_ORG,
+  });
   const githubSyncController = new GithubSyncController(githubSyncService, env.GITHUB_REPOS);
 
   app.use('/api/github', createGithubSyncRoutes(githubSyncController));
