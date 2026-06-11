@@ -22,6 +22,8 @@ export class EngineerService {
 
     return {
       ...engineer,
+      // Fall back to the username when an engineer has no display name set.
+      displayName: engineer.displayName ?? engineer.username,
       metrics: computeEngineerMetrics(source),
     };
   }
