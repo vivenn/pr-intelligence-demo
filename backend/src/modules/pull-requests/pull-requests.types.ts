@@ -10,6 +10,7 @@ export interface PullRequestWithRelations {
   title: string;
   authorLogin: string;
   state: string;
+  url: string | null;
   createdAt: Date;
   mergedAt: Date | null;
   closedAt: Date | null;
@@ -38,6 +39,7 @@ export interface PullRequestSummary {
   title: string;
   authorLogin: string;
   state: string;
+  url: string | null;
   createdAt: Date;
   mergedAt: Date | null;
   metrics: PullRequestMetrics;

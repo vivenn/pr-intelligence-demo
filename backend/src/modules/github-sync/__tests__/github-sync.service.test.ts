@@ -16,6 +16,7 @@ describe('GithubSyncService', () => {
       title: 'Add feature',
       authorLogin: 'alice',
       state: 'merged',
+      url: 'https://github.com/acme/widgets/pull/1',
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-02T00:00:00Z',
       mergedAt: '2026-01-02T00:00:00Z',

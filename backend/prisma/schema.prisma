@@ -28,6 +28,7 @@ model PullRequest {
   title        String
   authorLogin  String
   state        String
+  url          String?
   createdAt    DateTime
   updatedAt    DateTime
   mergedAt     DateTime?

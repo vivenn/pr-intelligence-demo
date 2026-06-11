@@ -42,6 +42,7 @@ export class GithubClient {
         title: detail.title,
         authorLogin: detail.user?.login ?? 'unknown',
         state: detail.merged_at ? 'merged' : detail.state,
+        url: detail.html_url,
         createdAt: detail.created_at,
         updatedAt: detail.updated_at,
         mergedAt: detail.merged_at,

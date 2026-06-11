@@ -34,6 +34,7 @@ export class GithubSyncRepository implements IGithubSyncRepository {
       title: raw.title,
       authorLogin: raw.authorLogin,
       state: raw.state,
+      url: raw.url,
       createdAt: new Date(raw.createdAt),
       updatedAt: new Date(raw.updatedAt),
       mergedAt: raw.mergedAt ? new Date(raw.mergedAt) : null,

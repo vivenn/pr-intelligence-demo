@@ -28,6 +28,7 @@ export interface PullRequestSummary {
   title: string;
   authorLogin: string;
   state: string;
+  url: string | null;
   createdAt: string;
   mergedAt: string | null;
   metrics: PullRequestMetrics;

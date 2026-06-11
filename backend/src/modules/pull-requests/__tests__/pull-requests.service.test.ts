@@ -10,6 +10,7 @@ function buildPullRequest(overrides: Partial<PullRequestWithRelations> = {}): Pu
     title: 'Add feature',
     authorLogin: 'alice',
     state: 'merged',
+    url: 'https://github.com/acme/widgets/pull/1',
     createdAt: new Date('2026-01-01T00:00:00Z'),
     mergedAt: new Date('2026-01-01T12:00:00Z'),
     closedAt: new Date('2026-01-01T12:00:00Z'),

@@ -39,7 +39,20 @@ export function PullRequestsPage() {
               {data.data.map((pr) => (
                 <tr key={pr.id}>
                   <td style={td}>{pr.number}</td>
-                  <td style={td}>{pr.title}</td>
+                  <td style={td}>
+                    {pr.url ? (
+                      <a
+                        href={pr.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 500 }}
+                      >
+                        {pr.title} ↗
+                      </a>
+                    ) : (
+                      pr.title
+                    )}
+                  </td>
                   <td style={td}>{pr.authorLogin}</td>
                   <td style={td}>
                     <StateBadge state={pr.state} />

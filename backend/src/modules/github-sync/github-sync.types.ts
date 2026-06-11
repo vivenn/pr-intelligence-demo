@@ -4,6 +4,7 @@ export interface RawPullRequest {
   title: string;
   authorLogin: string;
   state: string;
+  url: string;
   createdAt: string;
   updatedAt: string;
   mergedAt: string | null;
