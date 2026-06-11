@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api } from '../api/client';
 import { AsyncBoundary, Card, MetricStat, formatHours, formatNumber } from '../components/common';
 import { useAsync } from '../hooks/useAsync';
+import { RepositoryCharts } from './RepositoryCharts';
 
 function RepositorySummary({ id }: { id: string }) {
   const state = useAsync(() => api.getRepositorySummary(id), [id]);
@@ -10,7 +11,7 @@ function RepositorySummary({ id }: { id: string }) {
     <AsyncBoundary state={state}>
       {({ data: repo }) => (
         <Card title={repo.fullName}>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 24 }}>
             <MetricStat label="Total PRs" value={repo.metrics.totalPullRequests} />
             <MetricStat label="Merged" value={repo.metrics.mergedPullRequests} />
             <MetricStat label="Open" value={repo.metrics.openPullRequests} />
@@ -19,6 +20,7 @@ function RepositorySummary({ id }: { id: string }) {
             <MetricStat label="Reviews" value={repo.metrics.totalReviews} />
             <MetricStat label="Comments" value={repo.metrics.totalComments} />
           </div>
+          <RepositoryCharts repoId={repo.id} />
         </Card>
       )}
     </AsyncBoundary>

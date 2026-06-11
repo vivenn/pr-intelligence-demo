@@ -29,11 +29,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  listPullRequests: (params: { page?: number; pageSize?: number; author?: string } = {}) => {
+  listPullRequests: (
+    params: { page?: number; pageSize?: number; author?: string; repositoryId?: string } = {},
+  ) => {
     const query = new URLSearchParams();
     if (params.page) query.set('page', String(params.page));
     if (params.pageSize) query.set('pageSize', String(params.pageSize));
     if (params.author) query.set('author', params.author);
+    if (params.repositoryId) query.set('repositoryId', params.repositoryId);
     const qs = query.toString();
     return request<Paginated<PullRequestSummary>>(`/pull-requests${qs ? `?${qs}` : ''}`);
   },
