@@ -26,7 +26,7 @@ describe('GithubSyncService', () => {
       changedFiles: 3,
     },
     reviews: [{ id: 200, reviewerLogin: 'bob', state: 'APPROVED', submittedAt: '2026-01-01T12:00:00Z' }],
-    reviewComments: [{ id: 300, authorLogin: 'bob', createdAt: '2026-01-01T11:00:00Z' }],
+    reviewComments: [{ externalId: 'review:300', authorLogin: 'bob', createdAt: '2026-01-01T11:00:00Z' }],
     commits: [{ sha: 'abc123', authorLogin: 'alice', committedAt: '2026-01-01T01:00:00Z' }],
   };
 

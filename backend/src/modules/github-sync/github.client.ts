@@ -52,11 +52,15 @@ export class GithubClient {
         changedFiles: detail.changed_files ?? 0,
       };
 
-      const [reviews, reviewComments, commits] = await Promise.all([
+      const [reviews, inlineComments, issueComments, commits] = await Promise.all([
         this.getReviews(owner, repo, pull.number),
         this.getReviewComments(owner, repo, pull.number),
+        this.getIssueComments(owner, repo, pull.number),
         this.getCommits(owner, repo, pull.number),
       ]);
+
+      // Combine inline (code) review comments and conversation (issue) comments.
+      const reviewComments = [...inlineComments, ...issueComments];
 
       results.push({ pullRequest, reviews, reviewComments, commits });
     }
@@ -75,13 +79,25 @@ export class GithubClient {
     }));
   }
 
+  /** Inline comments on the diff (Files changed tab). */
   private async getReviewComments(owner: string, repo: string, pullNumber: number): Promise<RawReviewComment[]> {
     const { data } = await this.octokit.pulls.listReviewComments({ owner, repo, pull_number: pullNumber });
 
     return data.map((comment) => ({
-      id: comment.id,
+      externalId: `review:${comment.id}`,
       authorLogin: comment.user?.login ?? 'unknown',
       createdAt: comment.created_at,
+    }));
+  }
+
+  /** Conversation comments on the PR (the issue-comment thread). */
+  private async getIssueComments(owner: string, repo: string, pullNumber: number): Promise<RawReviewComment[]> {
+    const { data } = await this.octokit.issues.listComments({ owner, repo, issue_number: pullNumber });
+
+    return data.map((comment) => ({
+      externalId: `issue:${comment.id}`,
+      authorLogin: comment.user?.login ?? 'unknown',
+      createdAt: comment.created_at ?? new Date().toISOString(),
     }));
   }
 

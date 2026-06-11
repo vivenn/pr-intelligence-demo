@@ -22,7 +22,9 @@ export interface RawReview {
 }
 
 export interface RawReviewComment {
-  id: number;
+  // Source-prefixed id (e.g. "review:123" or "issue:456") since inline review-comment
+  // and conversation issue-comment IDs are separate sequences that can collide.
+  externalId: string;
   authorLogin: string;
   createdAt: string;
 }

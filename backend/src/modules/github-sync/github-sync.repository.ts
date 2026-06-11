@@ -73,7 +73,7 @@ export class GithubSyncRepository implements IGithubSyncRepository {
       }),
       this.prisma.reviewComment.createMany({
         data: data.reviewComments.map((comment) => ({
-          externalId: String(comment.id),
+          externalId: comment.externalId,
           pullRequestId,
           authorLogin: comment.authorLogin,
           createdAt: new Date(comment.createdAt),
