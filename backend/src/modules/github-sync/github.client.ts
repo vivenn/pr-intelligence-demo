@@ -52,31 +52,51 @@ export class GithubClient {
         changedFiles: detail.changed_files ?? 0,
       };
 
-      const [reviews, inlineComments, issueComments, commits] = await Promise.all([
-        this.getReviews(owner, repo, pull.number),
+      const [reviewData, inlineComments, issueComments, commits] = await Promise.all([
+        this.getReviewsAndBodyComments(owner, repo, pull.number),
         this.getReviewComments(owner, repo, pull.number),
         this.getIssueComments(owner, repo, pull.number),
         this.getCommits(owner, repo, pull.number),
       ]);
 
-      // Combine inline (code) review comments and conversation (issue) comments.
-      const reviewComments = [...inlineComments, ...issueComments];
+      // Comment metrics count all written feedback: inline code comments, conversation
+      // comments, and the summary body a reviewer leaves when submitting a review.
+      const reviewComments = [...inlineComments, ...issueComments, ...reviewData.bodyComments];
 
-      results.push({ pullRequest, reviews, reviewComments, commits });
+      results.push({ pullRequest, reviews: reviewData.reviews, reviewComments, commits });
     }
 
     return results;
   }
 
-  private async getReviews(owner: string, repo: string, pullNumber: number): Promise<RawReview[]> {
+  /**
+   * Fetches reviews once and derives two things from them: the review records
+   * (for review-count/timing metrics) and, for reviews that carry a written summary,
+   * a comment record (so review feedback shows up in comment metrics).
+   */
+  private async getReviewsAndBodyComments(
+    owner: string,
+    repo: string,
+    pullNumber: number,
+  ): Promise<{ reviews: RawReview[]; bodyComments: RawReviewComment[] }> {
     const { data } = await this.octokit.pulls.listReviews({ owner, repo, pull_number: pullNumber });
 
-    return data.map((review) => ({
+    const reviews: RawReview[] = data.map((review) => ({
       id: review.id,
       reviewerLogin: review.user?.login ?? 'unknown',
       state: review.state,
       submittedAt: review.submitted_at ?? null,
     }));
+
+    const bodyComments: RawReviewComment[] = data
+      .filter((review) => review.body && review.body.trim().length > 0)
+      .map((review) => ({
+        externalId: `reviewbody:${review.id}`,
+        authorLogin: review.user?.login ?? 'unknown',
+        createdAt: review.submitted_at ?? new Date().toISOString(),
+      }));
+
+    return { reviews, bodyComments };
   }
 
   /** Inline comments on the diff (Files changed tab). */
