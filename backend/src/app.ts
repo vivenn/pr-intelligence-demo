@@ -3,6 +3,7 @@ import express, { Express, Request, Response } from 'express';
 import { env } from './shared/config/env';
 import { prisma } from './shared/db/prisma';
 import { errorHandler } from './shared/errors/error-handler.middleware';
+import { apiKeyAuth } from './shared/middleware/auth.middleware';
 import { GithubSyncController } from './modules/github-sync/github-sync.controller';
 import { createGithubSyncService } from './modules/github-sync/github-sync.factory';
 import { createGithubSyncRoutes } from './modules/github-sync/github-sync.routes';
@@ -28,6 +29,9 @@ export function createApp(): Express {
   app.get('/health', (_req: Request, res: Response) => {
     res.json({ data: { status: 'ok' } });
   });
+
+  // Guard all /api routes (no-op when API_KEY is unset). /health stays public for probes.
+  app.use('/api', apiKeyAuth(env.API_KEY));
 
   const githubSyncService = createGithubSyncService(prisma, {
     githubToken: env.GITHUB_TOKEN,

@@ -11,8 +11,15 @@ import {
 
 const BASE = '/api';
 
+// Optional API key — sent only when configured (VITE_API_KEY). Matches the backend's
+// optional auth: no key set means no header, keeping local dev frictionless.
+const API_KEY = import.meta.env.VITE_API_KEY as string | undefined;
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, init);
+  const headers = new Headers(init?.headers);
+  if (API_KEY) headers.set('X-API-Key', API_KEY);
+
+  const res = await fetch(`${BASE}${path}`, { ...init, headers });
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`;

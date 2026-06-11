@@ -20,6 +20,9 @@ const envSchema = z.object({
     .string()
     .default('http://localhost:5173')
     .transform((value) => value.split(',').map((origin) => origin.trim()).filter(Boolean)),
+  // Optional API key. When set, all /api routes require a matching X-API-Key header.
+  // Unset = auth disabled (local dev / demo).
+  API_KEY: z.string().min(1).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
