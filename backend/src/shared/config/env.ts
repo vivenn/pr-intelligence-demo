@@ -1,3 +1,5 @@
+// configuration file for environment variables, using zod for validation and parsing
+
 import { z } from 'zod';
 import dotenv from 'dotenv';
 
